@@ -1,0 +1,6 @@
+{
+  "name": "EduLedger — School Management & Accounts Finance PWA",
+  "description": "Offline-first Progressive Web App for comprehensive school management, student/staff attendance, fee collection, expense tracking, and financial analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,200 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with role-based access control and school membership",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "username": { "type": "string", "maxLength": 50 },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["super_admin", "admin", "principal", "accountant", "hr_manager", "teacher", "receptionist", "librarian", "finance"] },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "lastLogin": { "type": "string" },
+        "forcePasswordChange": { "type": "boolean" }
+      },
+      "required": ["id", "username", "role", "isActive"]
+    },
+    "Student": {
+      "title": "Student Record",
+      "description": "Enrolled student record and academic status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "admissionNumber": { "type": "string", "maxLength": 50 },
+        "fullName": { "type": "string", "maxLength": 150 },
+        "grade": { "type": "string", "maxLength": 50 },
+        "section": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["active", "inactive", "graduated", "suspended"] }
+      },
+      "required": ["id", "admissionNumber", "fullName", "grade", "section"]
+    },
+    "FeePayment": {
+      "title": "Fee Payment Record",
+      "description": "Student fee collection transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "receiptNumber": { "type": "string", "maxLength": 60 },
+        "paidAmount": { "type": "number" },
+        "paymentDate": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "cheque", "online"] }
+      },
+      "required": ["id", "studentId", "receiptNumber", "paidAmount", "paymentDate"]
+    },
+    "Expense": {
+      "title": "School Expense",
+      "description": "Operational expense voucher",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "date": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "cheque", "online"] }
+      },
+      "required": ["id", "title", "amount", "date"]
+    },
+    "ActivityLog": {
+      "title": "Immutable Audit Log",
+      "description": "Security and operation audit record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string" },
+        "userName": { "type": "string", "maxLength": 100 },
+        "userRole": { "type": "string", "maxLength": 50 },
+        "action": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "severity": { "type": "string", "enum": ["info", "warning", "critical"] }
+      },
+      "required": ["id", "timestamp", "action", "details"]
+    },
+    "SchoolClass": {
+      "title": "Academic Class / Grade",
+      "description": "Dynamic school class definition with display ordering, sections, and active status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "display_order": { "type": "integer" },
+        "sections": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "name", "display_order", "status"]
+    },
+    "FeeStructure": {
+      "title": "Class Fee Structure",
+      "description": "Itemized fee structure linked to a class",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "class_id": { "type": "string", "maxLength": 128 },
+        "className": { "type": "string", "maxLength": 100 },
+        "termOrMonth": { "type": "string", "maxLength": 60 },
+        "billing_frequency": { "type": "string", "enum": ["Monthly", "Quarterly", "Half-Yearly", "Yearly"] },
+        "totalAmount": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "className", "totalAmount"]
+    },
+    "UsernameLookup": {
+      "title": "Username to Email Lookup",
+      "description": "Minimal lookup document resolving username to email and uid for login",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 150 },
+        "uid": { "type": "string", "maxLength": 128 },
+        "schoolId": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["email", "uid"]
+    },
+    "IssuedCertificate": {
+      "title": "Issued Certificate Register Entry",
+      "description": "Metadata record of an issued, re-issued, or cancelled certificate (never stores PDF binary)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "certificateNumber": { "type": "string", "maxLength": 60 },
+        "type": { "type": "string", "maxLength": 50 },
+        "designId": { "type": "string", "enum": ["geometric_triangles", "diagonal_stripes", "classic_ribbon_gold"] },
+        "recipientType": { "type": "string", "enum": ["student", "employee", "custom"] },
+        "recipientId": { "type": "string", "maxLength": 128 },
+        "recipientName": { "type": "string", "maxLength": 160 },
+        "issueDate": { "type": "string", "maxLength": 30 },
+        "issuedBy": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["Issued", "Cancelled", "Re-issued"] },
+        "cancelReason": { "type": "string", "maxLength": 300 }
+      },
+      "required": ["id", "certificateNumber", "type", "recipientName", "issueDate"]
+    },
+    "CertificateCounter": {
+      "title": "Monotonic Certificate Sequence Counter",
+      "description": "Atomic transaction counter preventing duplicate certificate numbers across devices",
+      "type": "object",
+      "properties": {
+        "seq": { "type": "integer" },
+        "year": { "type": "integer" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["seq"]
+    }
+  },
+  "firestore": {
+    "/schools/{schoolId}/settings/{settingId}": {
+      "schema": "SchoolSettings",
+      "description": "General school configuration and academic year setup"
+    },
+    "/schools/{schoolId}/classes/{classId}": {
+      "schema": "SchoolClass",
+      "description": "Dynamic school classes and grade definitions"
+    },
+    "/schools/{schoolId}/feeStructures/{structureId}": {
+      "schema": "FeeStructure",
+      "description": "Per-class itemized fee structure configuration"
+    },
+    "/schools/{schoolId}/users/{userId}": {
+      "schema": "User",
+      "description": "School staff and administrator user profiles"
+    },
+    "/schools/{schoolId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "School enrolled students"
+    },
+    "/schools/{schoolId}/feePayments/{paymentId}": {
+      "schema": "FeePayment",
+      "description": "Fee collection transactions"
+    },
+    "/schools/{schoolId}/expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Financial expense vouchers"
+    },
+    "/schools/{schoolId}/activityLogs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Immutable security and operational audit trail"
+    },
+    "/username_lookup/{username}": {
+      "schema": "UsernameLookup",
+      "description": "Global username to email resolution for Firebase sign-in"
+    },
+    "/schools/{schoolId}/username_lookup/{username}": {
+      "schema": "UsernameLookup",
+      "description": "School-scoped username to email resolution"
+    },
+    "/schools/{schoolId}/certificates/{certId}": {
+      "schema": "IssuedCertificate",
+      "description": "Immutable-delete certificate register with soft cancellation"
+    },
+    "/schools/{schoolId}/counters/{counterId}": {
+      "schema": "CertificateCounter",
+      "description": "Atomic monotonic counters for collision-free certificate numbering"
+    }
+  }
+}

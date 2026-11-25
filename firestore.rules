@@ -1,0 +1,417 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------
+    // GLOBAL DEFAULT DENY (Zero-Trust Security Barrier)
+    // -------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health check ping for connectivity diagnostics
+    match /__health_check__/ping {
+      allow read: if true;
+    }
+
+    // -------------------------------------------------------------
+    // SECURITY PRIMITIVES & HELPER FUNCTIONS
+    // -------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isDocOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData(schoolId) {
+      return get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data;
+    }
+
+    function userExists(schoolId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid));
+    }
+
+    function isSchoolActiveUser(schoolId) {
+      return userExists(schoolId) && getUserData(schoolId).isActive == true;
+    }
+
+    function getUserRole(schoolId) {
+      return getUserData(schoolId).role;
+    }
+
+    function isSchoolAdmin(schoolId) {
+      return isSchoolActiveUser(schoolId) &&
+        (getUserRole(schoolId) == 'admin' || getUserRole(schoolId) == 'super_admin');
+    }
+
+    function isSchoolFinance(schoolId) {
+      return isSchoolActiveUser(schoolId) &&
+        (getUserRole(schoolId) in ['admin', 'super_admin', 'finance', 'accountant']);
+    }
+
+    function isSchoolTeacher(schoolId) {
+      return isSchoolActiveUser(schoolId) && getUserRole(schoolId) == 'teacher';
+    }
+
+    // Dynamic Permission Checker: verifies if user has specific module privilege
+    function hasPerm(schoolId, module, action) {
+      return isSchoolAdmin(schoolId) || (
+        isSchoolActiveUser(schoolId) &&
+        getUserData(schoolId).customPermissions != null &&
+        getUserData(schoolId).customPermissions[module] != null &&
+        getUserData(schoolId).customPermissions[module][action] == true
+      );
+    }
+
+    function canApplyFeeDiscount(schoolId) {
+      return isSchoolFinance(schoolId) || hasPerm(schoolId, 'fee_collection', 'apply_discount');
+    }
+
+    // Input Validation Helpers
+    function isValidNonNegative(num) {
+      return (num is int || num is float) && num >= 0;
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isRootAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin']);
+    }
+
+    // -------------------------------------------------------------
+    // USER PROFILES DIRECTORY: /users/{userId}
+    // -------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isRootAdmin());
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        isRootAdmin() ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'status', 'isActive', 'id', 'schoolId']))
+      );
+      allow delete: if isRootAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // USERNAME LOOKUP: /username_lookup/{username}
+    // Single-document get allowed for login identifier resolution;
+    // listing disabled for anonymous users to prevent user enumeration.
+    // -------------------------------------------------------------
+    match /username_lookup/{username} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidString(request.resource.data.email, 3, 150)
+        && isValidString(request.resource.data.uid, 1, 128)
+        && (request.resource.data.uid == request.auth.uid || isRootAdmin());
+      allow delete: if isRootAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // SCHOOL DATA SCOPE: /schools/{schoolId}/...
+    // -------------------------------------------------------------
+    match /schools/{schoolId} {
+      
+      // School General Settings
+      match /settings/{settingId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      // User Directory & Profile Documents
+      match /users/{userId} {
+        // Active members can view user list (for directories & assignees); users can read own profile
+        allow read: if isSchoolActiveUser(schoolId) || isDocOwner(userId);
+        
+        // Only Main Admin can create or delete sub-accounts
+        allow create, delete: if isSchoolAdmin(schoolId);
+
+        // Updates: Admin has full edit; Non-admin can only update safe personal profile fields
+        allow update: if isSchoolAdmin(schoolId) || (
+          isDocOwner(userId) &&
+          isSchoolActiveUser(schoolId) &&
+          // Prevent non-admin users from escalating privileges or altering their role/permissions
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isActive', 'customPermissions', 'id'])
+        );
+      }
+
+      // School-scoped Username Lookup & Admin Security
+      match /username_lookup/{username} {
+        allow get: if true;
+        allow list: if isSchoolActiveUser(schoolId);
+        allow create, update: if isSchoolAdmin(schoolId) || (
+          isSignedIn() && request.resource.data.uid == request.auth.uid
+        );
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      match /admin_security/{docId} {
+        allow read, write: if isSchoolAdmin(schoolId);
+      }
+
+      // Dynamic Academic Classes Collection
+      match /classes/{classId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow create, update: if isSchoolAdmin(schoolId)
+          && isValidString(request.resource.data.name, 1, 100)
+          && (request.resource.data.status in ['active', 'inactive'])
+          && (request.resource.data.display_order is int || request.resource.data.display_order is float);
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Students Collection
+      match /students/{studentId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'students', 'view');
+        allow create: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'students', 'create')
+                      && isValidString(request.resource.data.fullName, 1, 150)
+                      && isValidString(request.resource.data.admissionNumber, 1, 50);
+        allow update: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'students', 'edit');
+        allow delete: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'students', 'delete');
+      }
+
+      // Staff Directory
+      match /staff/{staffId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'staff', 'view');
+        allow create: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'staff', 'create');
+        allow update: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'staff', 'edit');
+        allow delete: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'staff', 'delete');
+      }
+
+      // Staff Leaves
+      match /staffLeaves/{leaveId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow create: if isSchoolActiveUser(schoolId);
+        allow update: if isSchoolAdmin(schoolId) || hasPerm(schoolId, 'staff', 'edit');
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Student Attendance (Grouped by Class & Date for Free Spark Quota Optimization)
+      match /attendance/{attendanceDocId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'attendance', 'view');
+        allow create, update: if isSchoolActiveUser(schoolId) && (
+          hasPerm(schoolId, 'attendance', 'create') ||
+          hasPerm(schoolId, 'attendance', 'edit') ||
+          isSchoolTeacher(schoolId)
+        );
+        allow delete: if isSchoolAdmin(schoolId) || hasPerm(schoolId, 'attendance', 'delete');
+      }
+
+      // Staff Attendance
+      match /staffAttendance/{attendanceDocId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'staff', 'view');
+        allow create, update: if isSchoolAdmin(schoolId) || hasPerm(schoolId, 'staff', 'edit');
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Fee Structures
+      match /feeStructures/{structureId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'fee_collection', 'view');
+        allow create, update: if isSchoolFinance(schoolId) && (
+          request.resource.data.baseTuitionFee == null || isValidNonNegative(request.resource.data.baseTuitionFee)
+        );
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Fee Payments / Collections
+      match /feePayments/{paymentId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'fee_collection', 'view');
+        allow create: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'fee_collection', 'create')
+                      && (request.resource.data.paidAmount == null || isValidNonNegative(request.resource.data.paidAmount))
+                      && (request.resource.data.totalAmount == null || isValidNonNegative(request.resource.data.totalAmount))
+                      && (
+                        // Discount validation: optional, but if specified must be >= 0, <= gross_fee, and require permission if > 0
+                        request.resource.data.discount_amount == null || (
+                          request.resource.data.discount_amount is number &&
+                          request.resource.data.discount_amount >= 0 &&
+                          (request.resource.data.gross_fee == null || request.resource.data.discount_amount <= request.resource.data.gross_fee) &&
+                          (request.resource.data.discount_amount == 0 || canApplyFeeDiscount(schoolId))
+                        )
+                      )
+                      && isValidString(request.resource.data.receiptNumber, 1, 60);
+        allow update: if isSchoolFinance(schoolId) && hasPerm(schoolId, 'fee_collection', 'edit')
+                      && (
+                        request.resource.data.discount_amount == null || (
+                          request.resource.data.discount_amount is number &&
+                          request.resource.data.discount_amount >= 0 &&
+                          (request.resource.data.gross_fee == null || request.resource.data.discount_amount <= request.resource.data.gross_fee) &&
+                          (request.resource.data.discount_amount == 0 || canApplyFeeDiscount(schoolId))
+                        )
+                      );
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Expenses
+      match /expenses/{expenseId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'expenses', 'view');
+        allow create: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'expenses', 'create')
+                      && isValidNonNegative(request.resource.data.amount)
+                      && isValidString(request.resource.data.title, 1, 200);
+        allow update: if isSchoolFinance(schoolId) && hasPerm(schoolId, 'expenses', 'edit')
+                      && isValidNonNegative(request.resource.data.amount);
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Payroll Runs
+      match /payrollRuns/{runId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'payroll', 'view');
+        allow create: if isSchoolFinance(schoolId) && hasPerm(schoolId, 'payroll', 'create');
+        allow update: if isSchoolFinance(schoolId) && hasPerm(schoolId, 'payroll', 'edit');
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Salary Records
+      match /salaryRecords/{recordId} {
+        allow read: if isSchoolFinance(schoolId) || (
+          isSchoolActiveUser(schoolId) && resource.data.staffId == request.auth.uid
+        );
+        allow create, update: if isSchoolFinance(schoolId) && hasPerm(schoolId, 'payroll', 'create');
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Staff Loans & Advances
+      match /loans/{loanId} {
+        allow read: if isSchoolFinance(schoolId) || (
+          isSchoolActiveUser(schoolId) && resource.data.staffId == request.auth.uid
+        );
+        allow write: if isSchoolFinance(schoolId);
+      }
+
+      match /advances/{advanceId} {
+        allow read: if isSchoolFinance(schoolId) || (
+          isSchoolActiveUser(schoolId) && resource.data.staffId == request.auth.uid
+        );
+        allow write: if isSchoolFinance(schoolId);
+      }
+
+      // Exams & Exam Results
+      match /exams/{examId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'exams', 'view');
+        allow create, update: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'exams', 'create');
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      match /examResults/{resultId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'exams', 'view');
+        allow create, update: if isSchoolActiveUser(schoolId) && (
+          hasPerm(schoolId, 'exams', 'create') || isSchoolTeacher(schoolId)
+        );
+        allow delete: if isSchoolAdmin(schoolId);
+      }
+
+      // Budgets
+      match /budgets/{budgetId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'finance', 'view');
+        allow write: if isSchoolFinance(schoolId);
+      }
+
+      // Bookshop & Assets
+      match /books/{bookId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow write: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'inventory', 'create');
+      }
+
+      match /bookSales/{saleId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow create: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'inventory', 'create');
+        allow update, delete: if isSchoolAdmin(schoolId);
+      }
+
+      match /bookSuppliers/{supplierId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow write: if isSchoolFinance(schoolId);
+      }
+
+      match /supplierPayments/{paymentId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow write: if isSchoolFinance(schoolId);
+      }
+
+      // Certificate Register: validated metadata only, no hard deletes (soft cancel via status update)
+      match /certificates/{certId} {
+        allow read: if isSchoolActiveUser(schoolId) && (
+          isSchoolAdmin(schoolId) ||
+          getUserRole(schoolId) == 'principal' ||
+          hasPerm(schoolId, 'certificates', 'view')
+        );
+        allow create: if isSchoolActiveUser(schoolId)
+          && (
+            isSchoolAdmin(schoolId) ||
+            getUserRole(schoolId) == 'principal' ||
+            hasPerm(schoolId, 'certificates', 'create') ||
+            hasPerm(schoolId, 'certificates', 'generate') ||
+            isSchoolTeacher(schoolId)
+          )
+          && isValidString(request.resource.data.certificateNumber, 3, 60)
+          && isValidString(request.resource.data.recipientName, 1, 160)
+          && isValidString(request.resource.data.type, 1, 50)
+          && isValidString(request.resource.data.issueDate, 4, 30)
+          && (request.resource.data.status == null || request.resource.data.status in ['Issued', 'Re-issued']);
+        allow update: if isSchoolActiveUser(schoolId)
+          && (
+            isSchoolAdmin(schoolId) ||
+            getUserRole(schoolId) == 'principal' ||
+            hasPerm(schoolId, 'certificates', 'cancel') ||
+            hasPerm(schoolId, 'certificates', 'edit')
+          )
+          && request.resource.data.certificateNumber == resource.data.certificateNumber
+          && request.resource.data.recipientName == resource.data.recipientName
+          && (request.resource.data.status in ['Issued', 'Cancelled', 'Re-issued'])
+          && (request.resource.data.status != 'Cancelled' || isValidString(request.resource.data.cancelReason, 2, 300));
+        allow delete: if false; // IMMUTABLE REGISTER: Certificates may only be soft-cancelled, never deleted
+      }
+
+      // Atomic Monotonic Counters (e.g. /schools/{schoolId}/counters/certificates)
+      match /counters/{counterId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow create: if isSchoolActiveUser(schoolId)
+          && (
+            isSchoolAdmin(schoolId) ||
+            getUserRole(schoolId) == 'principal' ||
+            hasPerm(schoolId, 'certificates', 'create') ||
+            hasPerm(schoolId, 'certificates', 'generate') ||
+            isSchoolTeacher(schoolId)
+          )
+          && request.resource.data.seq is int
+          && request.resource.data.seq >= 1;
+        allow update: if isSchoolActiveUser(schoolId)
+          && (
+            isSchoolAdmin(schoolId) ||
+            getUserRole(schoolId) == 'principal' ||
+            hasPerm(schoolId, 'certificates', 'create') ||
+            hasPerm(schoolId, 'certificates', 'generate') ||
+            isSchoolTeacher(schoolId)
+          )
+          && request.resource.data.seq is int
+          && resource.data.seq is int
+          && request.resource.data.seq > resource.data.seq
+          && request.resource.data.seq <= resource.data.seq + 500;
+        allow delete: if false; // Counter documents can only increment monotonically
+      }
+
+      match /assets/{assetId} {
+        allow read: if isSchoolActiveUser(schoolId) && hasPerm(schoolId, 'inventory', 'view');
+        allow write: if isSchoolAdmin(schoolId) || hasPerm(schoolId, 'inventory', 'create');
+      }
+
+      // Activity Logs / Audit Trail:
+      // STRICT RULE: Can be created by any active user, but NEVER edited or deleted!
+      match /activityLogs/{logId} {
+        allow read: if isSchoolAdmin(schoolId);
+        allow create: if isSchoolActiveUser(schoolId);
+        allow update: if false; // IMMUTABLE: Editing audit logs is strictly forbidden
+        allow delete: if false; // IMMUTABLE: Deleting audit logs is strictly forbidden
+      }
+
+      // Pre-aggregated summaries for ultra-fast dashboard queries on Spark plan
+      match /summaries/{summaryId} {
+        allow read: if isSchoolActiveUser(schoolId);
+        allow write: if isSchoolFinance(schoolId);
+      }
+    }
+  }
+}

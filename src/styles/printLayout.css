@@ -1,0 +1,516 @@
+/* ==========================================================================
+   Dedicated Print Layout Stylesheet
+   For Official Financial Reports & Student Record Cards (Dossiers)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. On-Screen Print Preview Sheet Simulation
+   -------------------------------------------------------------------------- */
+.print-paper-sheet {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.print-paper-sheet.sheet-portrait {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 12mm 14mm;
+  margin: 0 auto;
+}
+
+.print-paper-sheet.sheet-landscape {
+  width: 297mm;
+  min-height: 210mm;
+  padding: 12mm 14mm;
+  margin: 0 auto;
+}
+
+/* --------------------------------------------------------------------------
+   2. Printable Elements Styling & Typography
+   -------------------------------------------------------------------------- */
+.print-table {
+  width: 100%;
+  border-collapse: collapse !important;
+  font-size: 8.5pt;
+  line-height: 1.35;
+}
+
+.print-table th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 8px;
+  border-top: 1.5px solid #334155 !important;
+  border-bottom: 1.5px solid #334155 !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+.print-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-left: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.print-table tr:nth-child(even) td {
+  background-color: #f8fafc !important;
+}
+
+.print-table tr.highlight-total td {
+  background-color: #f1f5f9 !important;
+  font-weight: 800;
+  border-top: 2px solid #334155 !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+/* Financial Indicators */
+.print-currency {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.print-currency-positive {
+  color: #047857 !important; /* Emerald 700 */
+}
+
+.print-currency-negative {
+  color: #b91c1c !important; /* Red 700 */
+}
+
+/* KPI Summary Metric Cards */
+.print-kpi-card {
+  border: 1.2px solid #cbd5e1 !important;
+  background-color: #f8fafc !important;
+  padding: 8px 10px;
+  border-radius: 6px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.print-kpi-card .kpi-label {
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.print-kpi-card .kpi-value {
+  font-size: 13pt;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  margin-top: 2px;
+}
+
+/* Official Attestation & Signatures */
+.print-signature-box {
+  border-top: 1.5px solid #475569 !important;
+  padding-top: 5px;
+  text-align: center;
+  font-size: 8pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.print-signature-box .signatory-name {
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.print-signature-box .signatory-title {
+  color: #64748b;
+  font-style: italic;
+  font-size: 7.5pt;
+}
+
+/* Student Bio-Data Card */
+.print-student-avatar {
+  width: 24mm;
+  height: 28mm;
+  border: 1.5px solid #cbd5e1;
+  background-color: #f1f5f9;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.print-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  text-transform: uppercase;
+}
+
+.print-badge.badge-success {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+.print-badge.badge-danger {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Physical Printer & PDF Export Rules (@media print)
+   -------------------------------------------------------------------------- */
+@media print {
+  /* Set exact page rules */
+  @page {
+    margin: 8mm 10mm 10mm 10mm;
+    size: auto;
+  }
+
+  /* Reset body colors to pure white and rich ink */
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide interactive UI elements */
+  .no-print,
+  .print\:hidden,
+  button,
+  input,
+  select,
+  nav,
+  aside,
+  header:not([data-printable="true"]),
+  .breadcrumb-nav,
+  .global-search-modal,
+  .toast-notification,
+  .theme-toggle-btn {
+    display: none !important;
+  }
+
+  /* When printing in Financial Report Mode */
+  body.print-mode-financial * {
+    visibility: hidden;
+  }
+
+  body.print-mode-financial #printable-financial-report,
+  body.print-mode-financial #printable-financial-report * {
+    visibility: visible;
+  }
+
+  body.print-mode-financial #printable-financial-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* When printing in Student Record Card Mode */
+  body.print-mode-student-record * {
+    visibility: hidden;
+  }
+
+  body.print-mode-student-record #printable-student-record-card,
+  body.print-mode-student-record #printable-student-record-card * {
+    visibility: visible;
+  }
+
+  body.print-mode-student-record #printable-student-record-card {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* When printing in Student Admission Form Mode */
+  body.print-mode-admission-form * {
+    visibility: hidden;
+  }
+
+  body.print-mode-admission-form #printable-admission-form,
+  body.print-mode-admission-form #printable-admission-form * {
+    visibility: visible;
+  }
+
+  body.print-mode-admission-form #printable-admission-form {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* When printing in Timetable Mode */
+  body.print-mode-timetable * {
+    visibility: hidden;
+  }
+
+  body.print-mode-timetable #printable-timetable-document,
+  body.print-mode-timetable #printable-timetable-document * {
+    visibility: visible;
+  }
+
+  body.print-mode-timetable #printable-timetable-document {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  /* When printing in Institutional Assets Mode */
+  body.print-mode-assets * {
+    visibility: hidden;
+  }
+
+  body.print-mode-assets #printable-assets-register,
+  body.print-mode-assets #printable-assets-register * {
+    visibility: visible;
+  }
+
+  body.print-mode-assets #printable-assets-register {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  /* When printing in Dedicated Slip & Voucher Mode (A4, A5, A6) */
+  body.print-mode-dedicated-slips * {
+    visibility: hidden;
+  }
+
+  body.print-mode-dedicated-slips #printable-dedicated-studio,
+  body.print-mode-dedicated-slips #printable-dedicated-studio * {
+    visibility: visible;
+  }
+
+  body.print-mode-dedicated-slips #printable-dedicated-studio {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  /* When printing Employee Leave Balance Statement */
+  body.print-mode-leave-balance * {
+    visibility: hidden;
+  }
+
+  body.print-mode-leave-balance #printable-leave-balance,
+  body.print-mode-leave-balance #printable-leave-balance * {
+    visibility: visible;
+  }
+
+  body.print-mode-leave-balance #printable-leave-balance {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  /* Paper size specific print page margin */
+  @page {
+    size: auto;
+    margin: 6mm 8mm 6mm 8mm;
+  }
+
+  /* Dedicated Auto-Formatting for Fee Receipts and Payroll Slips by Paper Size */
+  body.print-paper-a6 #printable-receipt,
+  body.print-paper-a6 #printable-payslip {
+    font-size: 8.5px !important;
+    padding: 2.5mm !important;
+    line-height: 1.25 !important;
+  }
+  body.print-paper-a6 #printable-receipt h1,
+  body.print-paper-a6 #printable-payslip h1 {
+    font-size: 11px !important;
+  }
+  body.print-paper-a6 #printable-receipt table,
+  body.print-paper-a6 #printable-payslip table {
+    font-size: 8px !important;
+  }
+  body.print-paper-a6 #printable-receipt th,
+  body.print-paper-a6 #printable-receipt td,
+  body.print-paper-a6 #printable-payslip th,
+  body.print-paper-a6 #printable-payslip td {
+    padding: 1.5px 3px !important;
+  }
+  body.print-paper-a6 #printable-receipt .grid,
+  body.print-paper-a6 #printable-payslip .grid {
+    gap: 4px !important;
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+    padding: 4px !important;
+  }
+
+  body.print-paper-a5 #printable-receipt,
+  body.print-paper-a5 #printable-payslip {
+    font-size: 10px !important;
+    padding: 4.5mm !important;
+    line-height: 1.35 !important;
+  }
+  body.print-paper-a5 #printable-receipt h1,
+  body.print-paper-a5 #printable-payslip h1 {
+    font-size: 13.5px !important;
+  }
+  body.print-paper-a5 #printable-receipt th,
+  body.print-paper-a5 #printable-receipt td,
+  body.print-paper-a5 #printable-payslip th,
+  body.print-paper-a5 #printable-payslip td {
+    padding: 2.5px 5px !important;
+  }
+
+  body.print-paper-a4 #printable-receipt,
+  body.print-paper-a4 #printable-payslip {
+    font-size: 11.5px !important;
+    padding: 6mm !important;
+  }
+
+  .print-table tr,
+  .print-kpi-card,
+  .print-signature-box,
+  .print-section-block,
+  .slip-card-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Force headers to repeat across printed pages if multi-page */
+  .print-table thead {
+    display: table-header-group !important;
+  }
+
+  .print-paper-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+}
+
+/* Screen Preview Sheet Simulation for A4, A5, and A6 */
+.sheet-a4 {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 100%;
+}
+
+.sheet-a5 {
+  width: 148mm;
+  min-height: 210mm;
+  max-width: 100%;
+}
+
+.sheet-a6 {
+  width: 105mm;
+  min-height: 148mm;
+  max-width: 100%;
+}
+
+/* Perforation dashed cutting line with scissors */
+.perforation-line {
+  border-top: 1.5px dashed #94a3b8;
+  position: relative;
+  margin: 6px 0;
+}
+
+.perforation-line::before {
+  content: "✂";
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: white;
+  padding: 0 4px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.perforation-line::after {
+  content: "✂ Cut along dashed line";
+  position: absolute;
+  top: -7px;
+  right: 12px;
+  background: white;
+  padding: 0 6px;
+  font-size: 8px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Print Mode for Financial Summary Statement */
+@media print {
+  body.print-mode-summary-statement * {
+    visibility: hidden !important;
+  }
+
+  body.print-mode-summary-statement .printable-statement-sheet,
+  body.print-mode-summary-statement .printable-statement-sheet * {
+    visibility: visible !important;
+  }
+
+  body.print-mode-summary-statement .printable-statement-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 8mm !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
+

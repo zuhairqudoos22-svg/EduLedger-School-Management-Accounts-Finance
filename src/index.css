@@ -1,0 +1,400 @@
+@import "tailwindcss";
+@import "./styles/printLayout.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Global Box-Sizing & Layout Discipline */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+/* Ensure flex/grid children shrink without breaking containers */
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Seamless Dark Mode Switch Transition without full page refresh */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              fill 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              stroke 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0s !important;
+}
+
+/* Visible, sleek scrollbars for all entry forms, modals, vouchers, and scrollable panels */
+.custom-scrollbar::-webkit-scrollbar,
+.entry-form-scroll::-webkit-scrollbar,
+form.overflow-y-auto::-webkit-scrollbar,
+div.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.entry-form-scroll::-webkit-scrollbar-track,
+form.overflow-y-auto::-webkit-scrollbar-track,
+div.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.16);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.entry-form-scroll::-webkit-scrollbar-thumb,
+form.overflow-y-auto::-webkit-scrollbar-thumb,
+div.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.55);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.entry-form-scroll::-webkit-scrollbar-thumb:hover,
+form.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+div.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.85);
+  background-clip: content-box;
+}
+
+/* Cross-browser Firefox support */
+.custom-scrollbar,
+.entry-form-scroll,
+form.overflow-y-auto,
+div.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.55) rgba(148, 163, 184, 0.16);
+}
+
+@media print {
+  @page {
+    margin: 12mm 10mm;
+    size: auto;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, fixed headers, modals, offline indicators, and action toolbars */
+  nav,
+  aside,
+  header:not([data-printable="true"]),
+  button,
+  .print\:hidden,
+  [role="region"][aria-label*="Install"],
+  [data-testid="pwa-install-banner"] {
+    display: none !important;
+  }
+
+  /* Expand main container to full width */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Keep table borders and avoid splitting table rows */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  .card,
+  .rounded-2xl,
+  .rounded-xl {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Specific A4 Landscape Certificate Printing */
+  body.certificate-print-active * {
+    visibility: hidden !important;
+  }
+
+  body.certificate-print-active #certificate-print-target,
+  body.certificate-print-active #certificate-print-target * {
+    visibility: visible !important;
+  }
+
+  body.certificate-print-active #certificate-print-target {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 99999 !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ========================================================================= */
+/* HRMS NAVIGATION TAB BAR - RESPONSIVE ZERO-OVERFLOW GRID                  */
+/* ========================================================================= */
+.hrms-tabs-container {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.hrms-tabs-grid {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 600px) {
+  .hrms-tabs-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .hrms-tabs-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hrms-tabs-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+}
+
+/* ========================================================================= */
+/* NAVBAR BRANDING & SEARCH WRAPPER FLEX DISCIPLINE                         */
+/* ========================================================================= */
+.navbar-main-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.navbar-school-branding {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  flex-shrink: 0;
+  min-width: 0;
+  position: static;
+}
+
+.navbar-search-wrapper {
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 480px;
+  width: 100%;
+  position: static;
+  margin: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.navbar-search-wrapper button,
+.navbar-search-wrapper input {
+  width: 100%;
+  max-width: 480px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.navbar-actions-group {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  margin-inline-start: auto;
+  box-sizing: border-box;
+}
+
+/* ========================================================================= */
+/* RTL (RIGHT-TO-LEFT) SCRIPT DIRECTION & LAYOUT ADAPTATION                  */
+/* ========================================================================= */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] body {
+  direction: rtl;
+}
+
+[dir="rtl"] input:not([type="number"]):not([type="email"]):not([type="tel"]):not([type="url"]):not(.font-mono),
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Numeric, phone, email, and monospace fields retain LTR semantics */
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] .font-mono,
+[dir="rtl"] .ltr-direction {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Dropdown alignment for RTL containers */
+[dir="rtl"] .navbar-actions-group {
+  margin-inline-start: auto;
+  margin-inline-end: 0;
+}
+
+/* ========================================================================= */
+/* OFFICIAL CERTIFICATION STUDIO: EXACT A4 LANDSCAPE PRINT RULES             */
+/* ========================================================================= */
+@media print {
+  body.certificate-print-active {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.certificate-print-active * {
+    visibility: hidden !important;
+  }
+
+  body.certificate-print-active #certificate-print-target,
+  body.certificate-print-active #certificate-print-target * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.certificate-print-active #certificate-print-target {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: hidden !important;
+    z-index: 999999 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  @page certificate-a4-landscape {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  body.certificate-print-active #certificate-print-target {
+    page: certificate-a4-landscape;
+  }
+
+  /* ========================================================================= */
+  /* HABITAT ADMISSION FORM: EXACT A4 PORTRAIT PRINT RULES                     */
+  /* ========================================================================= */
+  body.habitat-admission-print-active {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.habitat-admission-print-active * {
+    visibility: hidden !important;
+  }
+
+  body.habitat-admission-print-active #habitat-admission-print-target,
+  body.habitat-admission-print-active #habitat-admission-print-target * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.habitat-admission-print-active #habitat-admission-print-target {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    z-index: 999999 !important;
+    page: admission-a4-portrait;
+  }
+
+  body.habitat-admission-print-active #habitat-admission-print-target .habitat-print-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  body.habitat-admission-print-active #habitat-admission-print-target .habitat-print-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  @page admission-a4-portrait {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
+
+

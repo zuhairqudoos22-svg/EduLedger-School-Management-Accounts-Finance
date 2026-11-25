@@ -1,0 +1,104 @@
+{
+  "id": "/",
+  "name": "EduLedger — School Management & Accounts",
+  "short_name": "EduLedger",
+  "description": "Offline-first Progressive Web App for comprehensive school management, student/staff attendance, fee collection, expense tracking, and financial analytics.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#1E1B4B",
+  "theme_color": "#4F46E5",
+  "categories": [
+    "education",
+    "finance",
+    "productivity",
+    "business"
+  ],
+  "lang": "en",
+  "dir": "ltr",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Student Directory",
+      "short_name": "Students",
+      "description": "View and manage enrolled students",
+      "url": "/?tab=students",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Fee Collection",
+      "short_name": "Fees",
+      "description": "Collect tuition and issue receipts",
+      "url": "/?tab=fees",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Daily Attendance",
+      "short_name": "Attendance",
+      "description": "Mark student and staff attendance",
+      "url": "/?tab=attendance",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Financial Reports",
+      "short_name": "Reports",
+      "description": "View revenue, expenses and balance sheets",
+      "url": "/?tab=reports",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "EduLedger Executive Dashboard & Accounts Summary"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "EduLedger Mobile Portal & Fee Management"
+    }
+  ]
+}

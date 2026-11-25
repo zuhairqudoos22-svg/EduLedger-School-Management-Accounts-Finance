@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.gstatic.com; object-src 'none'; base-uri 'self';"
+    />
+    <title>NextGenAI — Optional Admin Console</title>
+    <link rel="icon" href="./assets/favicon/favicon.ico" sizes="any" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+    />
+    <script src="./js/theme-init.js"></script>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/admin.css" />
+  </head>
+
+  <body>
+    <div class="ambient-bg" aria-hidden="true">
+      <div class="ambient-orb ambient-orb--indigo"></div>
+      <div class="ambient-orb ambient-orb--cyan"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="container nav-bar">
+        <a class="brand-link" href="./index.html">
+          <span class="logo-badge logo-badge--nav">
+            <img src="./assets/logo/nextgenai-logo-128.jpg" alt="NextGenAI logo" width="36" height="36" />
+          </span>
+          <span class="brand-wordmark">NextGenAI Admin</span>
+        </a>
+
+        <div class="nav-actions">
+          <a class="btn btn--ghost btn--sm" href="./index.html">View Live Site</a>
+          <button type="button" class="btn btn--secondary btn--sm is-hidden" id="admin-signout">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container admin-main">
+      <!-- Shown when js/firebase-config.js has enabled: false -->
+      <section class="glass-card admin-card is-hidden" id="admin-disabled-panel">
+        <p class="section-eyebrow">Optional Mode Disabled</p>
+        <h1 class="admin-title">Static mode is active.</h1>
+        <p class="admin-desc">
+          Your website currently runs 100% statically from <code>js/site-data.js</code> with zero external services. To turn on this optional free Firebase Spark admin editor:
+        </p>
+        <ol class="admin-steps">
+          <li>Create a free Spark-plan project at Firebase Console (no billing required).</li>
+          <li>Enable <strong>Authentication → Email/Password</strong> and create your single admin user.</li>
+          <li>Create a <strong>Cloud Firestore</strong> database and paste <code>nextgenai-firestore.rules</code> into the Rules tab (replacing the admin email placeholder).</li>
+          <li>Paste your Firebase web config into <code>js/firebase-config.js</code> and set <code>enabled: true</code>.</li>
+        </ol>
+        <div class="admin-actions">
+          <a class="btn btn--primary btn--sm" href="./index.html">Return to Website</a>
+        </div>
+      </section>
+
+      <!-- Sign-In Form -->
+      <section class="glass-card admin-card is-hidden" id="admin-login-panel">
+        <p class="section-eyebrow">Firebase Spark Authentication</p>
+        <h1 class="admin-title">Sign in to manage site content.</h1>
+        <p class="admin-desc">
+          Sign in with the Email/Password admin account you created in your Firebase Console.
+        </p>
+        <form class="contact-form" id="admin-login-form" novalidate>
+          <div class="form-field">
+            <label class="form-label" for="login-email">Admin Email</label>
+            <input type="email" id="login-email" class="form-control" required autocomplete="username" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" required autocomplete="current-password" />
+          </div>
+          <p class="form-error" id="login-error" role="alert"></p>
+          <div>
+            <button type="submit" class="btn btn--primary" id="login-submit">Sign In</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Content Editor Workspace -->
+      <div class="admin-workspace is-hidden" id="admin-workspace">
+        <section class="glass-card admin-card">
+          <div class="admin-bar">
+            <div>
+              <p class="section-eyebrow">Live Firestore Sync (Free Spark Plan)</p>
+              <h1 class="admin-title">Manage Projects &amp; Contact</h1>
+            </div>
+            <div class="admin-actions">
+              <button type="button" class="btn btn--secondary btn--sm" id="btn-export-js">Download site-data.js Backup</button>
+              <button type="button" class="btn btn--primary btn--sm" id="btn-save-cloud">Save Changes to Firestore</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Projects Manager -->
+        <section class="glass-card admin-card">
+          <div class="admin-bar">
+            <h2 class="admin-section-title">Projects</h2>
+            <button type="button" class="btn btn--primary btn--sm" id="btn-add-project">+ Add Project</button>
+          </div>
+          <div class="admin-project-list" id="admin-project-list"></div>
+        </section>
+
+        <!-- Contact Details Manager -->
+        <section class="glass-card admin-card">
+          <h2 class="admin-section-title">Contact &amp; Social Links</h2>
+          <div class="form-row-2">
+            <div class="form-field">
+              <label class="form-label" for="edit-email">Email</label>
+              <input type="text" id="edit-email" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-phone">Phone</label>
+              <input type="text" id="edit-phone" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-whatsapp">WhatsApp (digits with country code)</label>
+              <input type="text" id="edit-whatsapp" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-location">Location</label>
+              <input type="text" id="edit-location" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-github">GitHub URL</label>
+              <input type="url" id="edit-github" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-linkedin">LinkedIn URL</label>
+              <input type="url" id="edit-linkedin" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-facebook">Facebook URL</label>
+              <input type="url" id="edit-facebook" class="form-control" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="edit-youtube">YouTube URL</label>
+              <input type="url" id="edit-youtube" class="form-control" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="./js/site-data.js" defer></script>
+    <script src="./js/firebase-config.js" defer></script>
+    <script type="module" src="./js/admin.js"></script>
+  </body>
+</html>
